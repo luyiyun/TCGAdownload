@@ -51,13 +51,14 @@ def get_progressbar(prefix, total_size, start_size=0):
 
 
 class TCGADownload:
-    def __init__(self, url, file_path, prefix, total_size=np.inf):
+    def __init__(self, url, file_path, prefix, total_size=np.inf, sleep_time=5):
         self.url = url
         self.file_path = file_path
         self.prefix = prefix
         self.start_size = 0  # 进度条开始的位置
         self.downloaded_size = 0  # 记录已经下载的量，用于更新进度条
         self.total_size = total_size  # 文件的总大小
+        self.sleep_time = sleep_time
 
     def download(self):
         while self.total_size > self.downloaded_size:
@@ -131,7 +132,7 @@ class TCGADownload:
                     'error:%d, 连接被拒绝，犯的错误是：%s......让我休息5秒钟......'
                     % (len(try_errors), try_errors[-1]), end='\r'
                 )
-                time.sleep(5)
+                time.sleep(self.sleep_time)
                 continue
         print()  # 前面使用的是\r，这里使得之后的打印可以换到下一行中
         self.request_try_errors = Counter(try_errors)  # 将记录的所有错误都整理成dict
@@ -178,6 +179,10 @@ def main():
         "-s", "--save", dest="S", type=str, default=os.curdir,
         help="Which folder is the download file saved to?"
     )
+    parser.add_argument(
+        "-st", "--sleep_time", type=int, default=5,
+        help="The time of waiting to next when error occur"
+    )
     args = parser.parse_args()
 
     # args
@@ -197,7 +202,8 @@ def main():
         file_path = os.path.join(save_path, ser['filename'])
         one_download = TCGADownload(
             url, file_path, total_size=total_size,
-            prefix="index: %d, filename: %s" % (i, ser['filename'][:-4])
+            prefix="index: %d, filename: %s" % (i, ser['filename'][:-4]),
+            sleep_time=args.sleep_time
         )
         one_download.download()
 
