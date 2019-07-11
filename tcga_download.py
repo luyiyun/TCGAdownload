@@ -95,7 +95,11 @@ class TCGADownload:
         elif self.total_size < np.inf:
             self._request()
             total_size1 = int(self.r.headers['content-length'])
-            assert total_size1 == self.total_size
+            if total_size1 != self.total_size:
+                raise ValueError(
+                    '当前已知的文件大小是%d，但网上得到的文件大小是%d。' 
+                    % (self.total_size, total_size1)
+                )
             self.open_type = 'wb'  # 如果文件不存在则就会是wb
         return True
 
